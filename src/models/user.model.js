@@ -26,11 +26,11 @@ const userSchema = new mongoose.Schema({
         index: true,
     },
     avatar: {
-        type: String,  //couldanary url
+        type: String,  //couldinary url
         required: true,
     },
     coverimage: {
-        type: String,  //couldanary url
+        type: String,  //couldinary url
     },
     watchHistory: [{
         type: mongoose.Schema.Types.ObjectId,
