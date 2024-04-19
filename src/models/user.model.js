@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs'; // check here if error occurs bcryptjs/bcrypt
+import bcrypt from 'bcrypt'; // check here if error occurs bcryptjs/bcrypt
 
 const userSchema = new mongoose.Schema({
     username: {
