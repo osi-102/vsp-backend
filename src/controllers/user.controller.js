@@ -4,8 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/fileUpload.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import e from "express";
+import { Aggregate } from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -267,7 +266,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   if(!fullname || !email || !username){
     throw new apiError(400, "All fields are required");
   }
-  const user = User.findByIdAndUpdate(req.user._id, 
+  const user = await User.findByIdAndUpdate(req.user._id, 
     {
       $set: {
         fullname,
@@ -313,6 +312,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   if(!avatarLocalPath){
     throw new apiError(400, "Avatar is required");
   }
+  //delete old avatar
+  
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   if(!avatar.url){
     throw new apiError(500, "Avatar upload failed");
@@ -331,6 +332,85 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   .json(new apiResponse(200, user, "Avatar updated successfully"));
 });
 
+// const deleteOldAvatar =asyncHandler (async (req, res) => {
+//   const user = await User.findById(req.user._id);
+//   if(user.avatar){
+//     const avatarId = user.avatar.split("/").pop();
+//     await deleteFromCloudinary(avatarId);
+//   }
+//   return;
+// });
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if(!username?.trim()){
+    throw new apiError(400, "Username is required");
+  }
+
+  const channel = await Aggregate([
+    {
+      $match:{
+        username: username?.toLowerCase()
+      }
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers"
+      }
+    },
+    {
+      $lookup:{
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo"
+      }
+    },
+    {
+      $addFields:{
+        subscriberCount: {
+          $size: "$subscribers"
+        },
+        subscribedToCount: {
+          $size: "$subscribedTo"
+        },
+        isSubscribed: {
+          $cond:{
+            if:{$in: [req.user?.id, "$subscribers.subscriber"]},
+            then: true,
+            else: false
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        fullname: 1,
+        username: 1,
+        avatar: 1,
+        coverimage: 1,
+        subscriberCount: 1,
+        subscribedToCount: 1,
+        isSubscribed: 1,
+        email: 1,
+
+      }
+    }
+  ])
+  console.log("channel", channel);
+  if(!channel.length){
+    throw new apiError(404, "Channel does not exist");
+  }
+
+  return res
+  .status(200)
+  .json(new apiResponse(200, channel[0], "Channel found successfully"));
+
+});
+
 export { 
   registerUser, 
   loginUser, 
@@ -341,4 +421,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  deleteOldAvatar,
 };
