@@ -422,4 +422,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   deleteOldAvatar,
+  getUserChannelProfile,
 };
