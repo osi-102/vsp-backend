@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/fileUpload.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import { Aggregate } from "mongoose";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -260,7 +260,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const currentUser = asyncHandler(async (req, res) => {
   //get the user from the request object
   //send response
-  return res.status(200).json(200, req.user, "scurrent user found");
+  return res
+  .status(200)
+  .json(200, req.user, "current user found");
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -350,7 +352,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     throw new apiError(400, "Username is required");
   }
 
-  const channel = await Aggregate([
+  const channel = await User.aggregate([
     {
       $match: {
         username: username?.toLowerCase(),
@@ -416,7 +418,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
       $match: {
-        _id: new mongoose.Type.ObjectId(req.user._id),
+        _id: new mongoose.Types.ObjectId(req.user._id),
       },
     },
     {
@@ -455,8 +457,14 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     },
   ]);
   return res
-  .status(200)
-  .json(new apiResponse(200, user[0].watchHistory, "Watch history found successfully"));
+    .status(200)
+    .json(
+      new apiResponse(
+        200,
+        "Watch history found successfully",
+        user[0].watchHistory
+      )
+    );
 });
 
 export {
@@ -469,7 +477,7 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
-  deleteOldAvatar,
+  // deleteOldAvatar,
   getUserChannelProfile,
   getWatchHistory,
 };

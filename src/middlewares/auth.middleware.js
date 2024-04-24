@@ -7,7 +7,7 @@ import { apiError } from "../utils/apiError.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
-        const token = req.cookie?.accessToken || req.headers.authorization?.replace("Bearer ", "");
+        const token = req.cookies?.accessToken || req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
             return res.status(401).json({message: "Unauthorized request"});
         }
